@@ -2,6 +2,8 @@ import numpy as np
 from math import sqrt
 from debug_info import debug_message
 import cv2 as cv
+from multiprocessing import Process, Manager
+
 
 class fish_distorsion_apllier:
 
@@ -77,8 +79,9 @@ class fish_distorsion_apllier:
 
         return dst_w / norm_coef, dst_h / norm_coef, True
 
+
     @staticmethod
-    def apply_fish_distortion(in_image, effect_w_center, effect_h_center, distortion_coefficient):
+    def apply_fish_distortion(in_image, effect_w_center, effect_h_center, distortion_coefficient, use_parallel = True):
         """
         Применяет эффект fisheye в указанном центре изображения
         In
@@ -86,6 +89,7 @@ class fish_distorsion_apllier:
         in_image: numpy.ndarray, RGBA image
         effect_w_center, effect_h_center: effect center in pixels
         distortion_coefficient: value of image distortion, bigger value => pixels move from effect center
+        use_parallel: bool, use parallel calculations
         Out
         ----
         out_image: numpy.ndarray, RGBA image with effect
@@ -95,12 +99,85 @@ class fish_distorsion_apllier:
             debug_message('Unable to apply fish distortion to image, preprocess it first')
             return None
 
+        if use_parallel:
+            MAX_TOTAL_LAUNCHES = 20
+            return fish_distorsion_apllier.__apply_fish_distortion_mp(in_image, MAX_TOTAL_LAUNCHES, effect_w_center, effect_h_center, distortion_coefficient)
+        else:
+            return fish_distorsion_apllier.__apply_fish_distortion_mp(in_image, 1, effect_w_center, effect_h_center, distortion_coefficient)
+
+
+    @staticmethod
+    def __apply_fish_distortion_mp(in_image, process_count, effect_w_center, effect_h_center, distortion_coefficient):
+        """
+        Применяет эффект fisheye в указанном центре изображения
+        In
+        ----
+        in_image: numpy.ndarray, RGBA image
+        process_count: int, amount of total parallel calls
+        effect_w_center, effect_h_center: effect center in pixels
+        distortion_coefficient: value of image distortion, bigger value => pixels move from effect center
+        Out
+        ----
+        out_image: numpy.ndarray, RGBA image with effect
+        """
+
+        im_width = in_image.shape[0]
+        w_all_range = np.arange(im_width)
+        out_image = np.zeros_like(in_image)
+        w_process_ranges = np.array_split(w_all_range, process_count)
+        in_args = [[in_image, w_range, effect_w_center, effect_h_center, distortion_coefficient] for w_range in w_process_ranges]
+        return_dict = fish_distorsion_apllier.__parallel_launch(fish_distorsion_apllier.process_apply_fish_distortion, in_args)
+
+        for width_range, image_res in return_dict.items():
+            # print(widht_range, image_res.shape)
+            out_image[width_range[0]:width_range[1]] = image_res
+        return out_image
+
+
+    @staticmethod
+    def __parallel_launch(launch_target, args_list):
+        MAX_PARALLEL_LAUNCHES = 20
+        proc_list = []
+        manager = Manager()
+        return_dict = manager.dict()
+        launch_chunks_count = (len(args_list) + MAX_PARALLEL_LAUNCHES - 1) // MAX_PARALLEL_LAUNCHES
+        for chunk_num in range(launch_chunks_count):
+            launch_count = min(MAX_PARALLEL_LAUNCHES, len(args_list) - chunk_num * MAX_PARALLEL_LAUNCHES)
+            proc_list.clear()
+            for task_num in range(launch_count):
+                proc = Process(target=launch_target, args=[return_dict] + args_list[chunk_num * MAX_PARALLEL_LAUNCHES + task_num])
+                proc.start()
+                proc_list.append(proc)
+
+            for process in proc_list:
+                process.join()
+
+        return return_dict
+
+    @staticmethod
+    def process_apply_fish_distortion(out_image_dict, in_image, w_range, effect_w_center, effect_h_center, distortion_coefficient):
+        """
+        Применяет эффект fisheye в указанном центре изображения
+        In
+        ----
+        in_image: numpy.ndarray, RGBA image
+        out_image_dict: dict, key is w_range, value is numpy.ndarray, RGBA image with effect
+        w_range: range/list, pixel_width_values
+        effect_w_center, effect_h_center: effect center in pixels
+        distortion_coefficient: value of image distortion, bigger value => pixels move from effect center
+        Out
+        ----
+        out_image: numpy.ndarray, RGBA image with effect
+        """
+
+
         im_width = in_image.shape[0]
         im_height = in_image.shape[1]
-        out_image = np.zeros_like(in_image)
+        out_image = np.zeros((len(w_range), im_height, 4), dtype=np.uint8)
+
         EMPTY = np.zeros(4, dtype=np.uint8)
 
-        for w_ind in range(im_width):
+        for w_ind in w_range:
             for h_ind in range(im_height):
 
                 out_w_norm, out_h_norm = fish_distorsion_apllier.normalize_pixel_pos(w_ind, h_ind,
@@ -117,10 +194,9 @@ class fish_distorsion_apllier:
                     if src_w_ind is not None and src_h_ind is not None:
                         dst_pixel_value = in_image[src_w_ind, src_h_ind]
 
-                out_image[w_ind, h_ind] = dst_pixel_value.copy()
+                out_image[w_ind - w_range[0], h_ind] = dst_pixel_value.copy()
 
-        return out_image
-
+        out_image_dict[(w_range[0], w_range[-1] + 1)] = out_image.copy()
 
     @staticmethod
     def __get_max_possible_size(effect_w_center, effect_h_center, im_width, im_height):
@@ -292,8 +368,11 @@ def out_of_bound_dist_test():
     cv.imshow('CENTER_DIST', res)
     cv.waitKey(0)
 
-#transform_test ()
-#no_dist_test()
-#center_dist_test()
-#edge_dist_test()
-#out_of_bound_dist_test()
+
+if __name__ == "__main__":
+    #transform_test ()
+    #no_dist_test()
+    center_dist_test()
+    #edge_dist_test()
+    #out_of_bound_dist_test()
+    pass
