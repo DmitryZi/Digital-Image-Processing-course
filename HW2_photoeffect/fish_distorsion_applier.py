@@ -73,7 +73,7 @@ class fish_distorsion_apllier:
         """
 
         dst_rad = sqrt(dst_w**2 + dst_h**2)
-        norm_coef = min(1, max(0, 1 - distortion * (dst_rad**2)))
+        norm_coef = max(0, 1 - distortion * (dst_rad**2))
         if np.isclose(norm_coef, 0.):
             return None, None, False
 
