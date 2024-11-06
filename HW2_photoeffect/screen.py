@@ -88,24 +88,15 @@ class screen:
         if event == cv.EVENT_LBUTTONDOWN:
             self.__manager.update_center(y, x)
             self.status = self.STATUS_EMPTY
-            self.__state == self.PASS_STATE
-            self.draw_screen()
+            self.__state = self.PASS_STATE
 
         if event == cv.EVENT_RBUTTONDOWN:
             self.__state = self.PASS_STATE
             self.status = self.STATUS_EMPTY
             self.__manager.clear()
-            self.draw_screen()
 
     def manage_input(self):
-        key = cv.waitKeyEx(0)
-
-        if cv.getWindowProperty(self.window_name, cv.WND_PROP_VISIBLE) < 1:
-            self.__state = self.CLOSE_STATE
-            return
-        if key < 0:
-            self.__state = self.CLOSE_STATE
-            return
+        key = cv.waitKey(10)
 
         if key == ord('+') or key == ord('='):
             self.__manager.increase_distorsion()
@@ -121,6 +112,7 @@ class screen:
             # Enter
             self.status = self.STATUS_INPROGRESS
             self.__state = self.WORK_STATE
+
 
     def loop(self, image_path):
         self.__manager.load(image_path)
