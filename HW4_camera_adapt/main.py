@@ -1,6 +1,7 @@
 import cv2 as cv
 from loader import load_image
 import image_processing
+import template_processing
 
 if __name__ == "__main__":
     TEST_PATH = "examples/3.jpg"
@@ -29,6 +30,7 @@ if __name__ == "__main__":
             cv.imshow('Transformed', transformed)
             cv.waitKey(0)
 
+            board_cut = template_processing.board_cut(transformed)
             cv.rectangle(transformed, (100, 100), (300, 300), (0, 255, 0), 10)
 
             updated = image_processing.camera_inverse_transform(orig_image, transformed, ordered_corners, calibrate_matrix)
