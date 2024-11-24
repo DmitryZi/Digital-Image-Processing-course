@@ -3,7 +3,7 @@ from loader import load_image
 import image_processing
 
 if __name__ == "__main__":
-    TEST_PATH = "examples/6.jpg"
+    TEST_PATH = "examples/3.jpg"
     orig_image = load_image(TEST_PATH)
     if orig_image is not None:
         cv.imshow('Orig', orig_image)
@@ -15,11 +15,22 @@ if __name__ == "__main__":
 
         sudoku_cnts = image_processing.get_border_contours(prepared)
         if sudoku_cnts is not None:
-            res_contours = cv.drawContours(orig_image, sudoku_cnts, -1, (0, 255, 0), 2)
-            cv.imshow('Contour', res_contours)
-            cv.waitKey(0)
+            res_contours = cv.drawContours(orig_image.copy(), sudoku_cnts, -1, (0, 255, 0), 2)
+            # cv.imshow('Contour', res_contours)
+            # cv.waitKey(0)
 
             rect_approx = image_processing.approx_as_rect(sudoku_cnts)
-            res_contours = cv.drawContours(orig_image, [rect_approx], -1, (0, 0, 255), 2)
+            res_contours = cv.drawContours(orig_image.copy(), [rect_approx], -1, (0, 0, 255), 2)
             cv.imshow('Contour approx', res_contours)
+            cv.waitKey(0)
+
+            ordered_corners = image_processing.sort_corners(rect_approx)
+            transformed, calibrate_matrix = image_processing.camera_calibrate(orig_image, ordered_corners)
+            cv.imshow('Transformed', transformed)
+            cv.waitKey(0)
+
+            cv.rectangle(transformed, (100, 100), (300, 300), (0, 255, 0), 10)
+
+            updated = image_processing.camera_inverse_transform(orig_image, transformed, ordered_corners, calibrate_matrix)
+            cv.imshow('Result', updated)
             cv.waitKey(0)
