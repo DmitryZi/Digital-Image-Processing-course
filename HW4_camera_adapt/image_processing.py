@@ -1,4 +1,5 @@
 import cv2 as cv
+import numpy as np
 from debug_info import debug_message
 
 def image_preprocess(in_image):
@@ -52,8 +53,6 @@ def get_border_contours(in_image):
     return res_cnts
 
 
-
-
 def approx_as_rect(in_contours):
     result = []
 
@@ -68,4 +67,54 @@ def approx_as_rect(in_contours):
         if 3 <= points_count <= 5:
             return cv.boxPoints(cv.minAreaRect(poly_approx))
 
+    return result
+
+
+def sort_corners(rect_contour):
+
+    result = np.zeros((4, 2), dtype=np.float32)
+    rect_contour = np.squeeze(rect_contour)
+    coords_sum = np.sum(rect_contour, axis=1)
+    coords_diff = np.diff(rect_contour, axis=1)
+
+    """
+    0 1
+    3 2
+    """
+    result[0] = rect_contour[np.argmin(coords_sum)]
+    result[1] = rect_contour[np.argmin(coords_diff)]
+    result[2] = rect_contour[np.argmax(coords_sum)]
+    result[3] = rect_contour[np.argmax(coords_diff)]
+
+    return result
+
+
+def camera_calibrate(in_image, border_corners):
+
+    border_size = cv.contourArea(border_corners)
+    calibrated_image_size = int(np.round(np.sqrt(border_size) // 9, -1) * 9)
+    # print(calibrated_image_size)
+
+    new_corners = np.array([[0, 0], [calibrated_image_size - 1, 0], [calibrated_image_size - 1, calibrated_image_size - 1], [0, calibrated_image_size - 1]], border_corners.dtype)
+    calibrate_matrix = cv.getPerspectiveTransform(border_corners, new_corners)
+    result = cv.warpPerspective(in_image, calibrate_matrix, (calibrated_image_size, calibrated_image_size))
+
+    return result, calibrate_matrix
+
+
+def camera_inverse_transform(orig_image, changed_part, part_contour, calibrate_matrix):
+
+    result = orig_image.copy()
+    result_shape = orig_image.shape[:2]
+
+    inverse_calibrate_matrix = np.linalg.inv(calibrate_matrix)
+    inversed_change = cv.warpPerspective(changed_part, calibrate_matrix, result_shape[::-1], flags=cv.WARP_INVERSE_MAP)
+
+    # Update only changed part of image
+    contour_mask = np.full(result_shape, False)
+    for x in range(result_shape[0]):
+        for y in range(result_shape[1]):
+            contour_mask[x, y] = cv.pointPolygonTest(part_contour, (y, x), False) >= 0
+
+    result[contour_mask] = inversed_change[contour_mask]
     return result
