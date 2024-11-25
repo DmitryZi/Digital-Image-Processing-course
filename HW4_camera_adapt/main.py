@@ -50,8 +50,9 @@ if __name__ == "__main__":
             quit()
         print("After solve:")
         print(solved_grid)
-        cv.rectangle(transformed, (100, 100), (300, 300), (0, 255, 0), 10)
 
-        updated = image_processing.camera_inverse_transform(orig_image, transformed, ordered_corners, calibrate_matrix)
-        # cv.imshow('Result', updated)
-        # cv.waitKey(0)
+        printed_grid = image_processing.print_grid(transformed, board_cut, cell_size, in_grid, solved_grid)
+
+        updated = image_processing.camera_inverse_transform(orig_image, printed_grid, ordered_corners, calibrate_matrix)
+        cv.imshow('Result', updated)
+        cv.waitKey(0)

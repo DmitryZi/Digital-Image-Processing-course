@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from debug_info import debug_message
+from sudoku_solver import CELLS_COUNT, EMPTY_CELL_VALUE
 
 def image_preprocess(in_image):
     res_image = None
@@ -68,6 +69,26 @@ def approx_as_rect(in_contours):
             return cv.boxPoints(cv.minAreaRect(poly_approx))
 
     return result
+
+def print_grid(in_board_image, cells_borders, cell_size, in_grid, solved_grid):
+
+    result = in_board_image.copy()
+    for cell_h_ind in range(CELLS_COUNT):
+        for cell_w_ind in range(CELLS_COUNT):
+            if in_grid[cell_h_ind, cell_w_ind] != EMPTY_CELL_VALUE:
+                continue
+
+            # Print number on image
+            cell_start, cell_end = cells_borders[cell_w_ind, cell_h_ind]
+            offset = cell_size * 0.2
+            print_start = (int(cell_start[0] + offset[0]), int(cell_end[1] - offset[1]))
+            FONT = cv.FONT_HERSHEY_COMPLEX
+            font_size = 2 * cell_size[0] / 80
+            COLOR = (10, 10, 10)
+            cv.putText(result, str(int(solved_grid[cell_h_ind, cell_w_ind])), print_start, FONT, font_size, COLOR, 2)
+
+    return result
+
 
 
 def sort_corners(rect_contour):
