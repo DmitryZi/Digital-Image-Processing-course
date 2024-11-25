@@ -57,16 +57,13 @@ def predict_template(image, in_templates):
     MIN_MATCH = 0.4
     result = []
 
-    cv.imshow("Test_before", image)
+    # cv.imshow("Test_before", image)
     test_image = preprocess_image(image)
-    cv.imshow("Test", test_image)
-    cv.waitKey(0)
-    index = 1
+    # cv.imshow("Test", test_image)
+    # cv.waitKey(0)
     for template in in_templates:
         template_res = cv.matchTemplate(test_image, template, cv.TM_CCOEFF_NORMED)
-        cv.imshow(f"{index}", template_res)
         min_val , max_val, min_loc, max_loc = cv.minMaxLoc(template_res)
-        index += 1
         '''
         if 0.1 * image.shape[1] < max_loc[0] < 0.1 * image.shape[1] and \
            0.1 * image.shape[0] < max_loc[1] < 0.1 * image.shape[0]:
@@ -77,16 +74,16 @@ def predict_template(image, in_templates):
         result.append(max_val)
         # result.append(1 - min_val)
 
-    print(result)
+    # print(result)
     if max(result) < MIN_MATCH:
         return -1
 
     res = np.argmax(result)
-    cv.namedWindow("test", cv.WINDOW_KEEPRATIO)
-    cv.imshow("test", test_image)
-    cv.namedWindow("match", cv.WINDOW_KEEPRATIO)
-    cv.imshow("match", in_templates[res])
-    cv.waitKey(0)
+    # cv.namedWindow("test", cv.WINDOW_KEEPRATIO)
+    # cv.imshow("test", test_image)
+    # cv.namedWindow("match", cv.WINDOW_KEEPRATIO)
+    # cv.imshow("match", in_templates[res])
+    # cv.waitKey(0)
     return res
 
 def grid_create(board_image, cells_borders, cells_size, num_templates):
