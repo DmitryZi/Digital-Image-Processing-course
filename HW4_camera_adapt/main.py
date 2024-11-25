@@ -2,6 +2,7 @@ import cv2 as cv
 from loader import load_image
 import image_processing
 import template_processing
+from sudoku_solver import solve
 
 
 if __name__ == "__main__":
@@ -41,7 +42,14 @@ if __name__ == "__main__":
         cv.waitKey(0)
 
         board_cut, cell_size = template_processing.board_cut(transformed)
-        template_processing.grid_create(transformed, board_cut, cell_size, num_templates)
+        in_grid = template_processing.grid_create(transformed, board_cut, cell_size, num_templates)
+        print("Before solve:")
+        print(in_grid)
+        solved_grid = solve(in_grid)
+        if solved_grid is None:
+            quit()
+        print("After solve:")
+        print(solved_grid)
         cv.rectangle(transformed, (100, 100), (300, 300), (0, 255, 0), 10)
 
         updated = image_processing.camera_inverse_transform(orig_image, transformed, ordered_corners, calibrate_matrix)
