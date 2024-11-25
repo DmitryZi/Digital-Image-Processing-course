@@ -6,8 +6,8 @@ import template_processing
 
 if __name__ == "__main__":
 
-    NUMBER_PATHS = [f"number_templates/{num}.jpg" for num in range(1, 10)]
     TEST_PATH = "examples/3.jpg"
+    NUMBER_PATHS = [f"number_templates/{num}_new.png" for num in range(1, 10)]
 
     num_templates = template_processing.load_templates(NUMBER_PATHS)
     if num_templates is None:
