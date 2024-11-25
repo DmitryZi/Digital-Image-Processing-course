@@ -3,9 +3,8 @@ import numpy as np
 from loader import load_image
 from debug_info import debug_message
 from image_processing import get_border_contours
-from sudoku_solver import CELLS_COUNT
+from sudoku_solver import CELLS_COUNT, EMPTY_CELL_VALUE
 
-CELLS_COUNT = 9
 
 def board_cut(board_image):
 
@@ -88,7 +87,7 @@ def predict_template(image, in_templates):
 
 def grid_create(board_image, cells_borders, cells_size, num_templates):
 
-    result = np.zeros((CELLS_COUNT, CELLS_COUNT), dtype=np.int32)
+    result = np.full((CELLS_COUNT, CELLS_COUNT), EMPTY_CELL_VALUE, dtype=np.int32)
 
     # Digit is 65% height of cell
     orig_template_size = num_templates[0].shape[0]
