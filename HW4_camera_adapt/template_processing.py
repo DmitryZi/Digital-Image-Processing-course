@@ -98,7 +98,7 @@ def grid_create(board_image, cells_borders, cells_size, num_templates):
     for cell_h_ind in range(CELLS_COUNT):
         for cell_w_ind in range(CELLS_COUNT):
             cell_start, cell_end = cells_borders[cell_h_ind, cell_w_ind]
-            print(cell_start, cell_end)
+            # print(cell_start, cell_end)
 
             cell_image = board_image[cell_start[0]:cell_end[0], cell_start[1]:cell_end[1]]
             found_template = predict_template(cell_image, scaled_templates)
