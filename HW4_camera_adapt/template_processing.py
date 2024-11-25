@@ -39,7 +39,10 @@ def preprocess_image(in_image):
     else:
         res_image = in_image.copy()
     # res_image = cv.Canny(res_image, 50, 200)
-    _, res_image = cv.threshold(res_image, 155, 255, cv.THRESH_BINARY)
+    # _, res_image = cv.threshold(res_image, 140, 255, cv.THRESH_BINARY)
+    image_y_mult = in_image.shape[0] / 100
+    image_x_mult = in_image.shape[1] / 100
+    res_image = cv.adaptiveThreshold(res_image, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, int(min(image_x_mult, image_y_mult) * 31) // 2 * 2 + 1, 10)
     res_image = res_image / 255.
     '''
     contours = get_border_contours(res_image)
