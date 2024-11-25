@@ -32,8 +32,8 @@ if __name__ == "__main__":
 
         rect_approx = image_processing.approx_as_rect(sudoku_cnts)
         res_contours = cv.drawContours(orig_image.copy(), [rect_approx], -1, (0, 0, 255), 2)
-        cv.imshow('Contour approx', res_contours)
-        cv.waitKey(0)
+        # cv.imshow('Contour approx', res_contours)
+        # cv.waitKey(0)
 
         ordered_corners = image_processing.sort_corners(rect_approx)
         transformed, calibrate_matrix = image_processing.camera_calibrate(orig_image, ordered_corners)
@@ -45,5 +45,5 @@ if __name__ == "__main__":
         cv.rectangle(transformed, (100, 100), (300, 300), (0, 255, 0), 10)
 
         updated = image_processing.camera_inverse_transform(orig_image, transformed, ordered_corners, calibrate_matrix)
-        cv.imshow('Result', updated)
-        cv.waitKey(0)
+        # cv.imshow('Result', updated)
+        # cv.waitKey(0)
